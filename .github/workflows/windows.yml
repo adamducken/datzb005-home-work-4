@@ -1,0 +1,32 @@
+name: Windows smoke tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check grade statistics with Windows CMD
+        shell: pwsh
+        run: |
+          $expected = @(
+            'Atzime 1: 8', 'Atzime 2: 6', 'Atzime 3: 9', 'Atzime 4: 10',
+            'Atzime 5: 7', 'Atzime 6: 3', 'Atzime 7: 2', 'Atzime 8: 9',
+            'Skaits: 8', 'Summa: 54', 'Mazaka: 2', 'Lielaka: 10',
+            'Videja: 6.75', 'Sekmigas: 6', 'Nesekmigas: 2'
+          )
+          $actual = @(& cmd /d /c 'call atzimes.bat')
+          if ($LASTEXITCODE -ne 0) { throw 'Batch script failed' }
+          $actual
+          if (($actual -join "`n") -cne ($expected -join "`n")) {
+            throw 'Unexpected grade statistics'
+          }
+          Write-Host 'PASS: all grades and statistics match.'
